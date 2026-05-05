@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Groundsong">
+<title>Groundsong</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --dark:#1A1A2E;--gold:#D4A017;--amber:#BA7517;--red:#C0392B;
+  --green:#1D9E75;--teal:#2C7873;--blue:#378ADD;
+  --white:#fff;--light:#FAF7F2;--grey:#555;--lgrey:#999;
+  --border:#E0E0E0;--bg:#F4F4F6;
+  --lowc:#E24B4A;--modc:#BA7517;--highc:#27AE60;
+}
+html,body{height:100%;background:var(--light);color:var(--dark);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow-x:hidden}
+.app-header{background:var(--dark);padding:13px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.app-header h1{font-size:18px;font-weight:700;color:#fff;letter-spacing:3px}
+.app-header span{font-size:11px;color:var(--gold);font-style:italic}
+.tabs{display:flex;overflow-x:auto;background:var(--dark);padding:0 14px;border-bottom:2px solid rgba(255,255,255,0.1);-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:11px 14px;font-size:13px;font-weight:500;color:rgba(255,255,255,0.45);border:none;background:none;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-2px}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+.section{display:none;padding:16px;padding-bottom:40px}
+.section.active{display:block}
+.scenario-bar{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.scenario-bar label{font-size:12px;color:var(--lgrey)}
+.s-btn{padding:6px 16px;font-size:13px;font-weight:500;border-radius:20px;border:1.5px solid var(--border);background:none;cursor:pointer;color:var(--grey)}
+.s-btn.low.active{background:var(--lowc);border-color:var(--lowc);color:#fff}
+.s-btn.mod.active{background:var(--modc);border-color:var(--modc);color:#fff}
+.s-btn.high.active{background:var(--highc);border-color:var(--highc);color:#fff}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:9px;margin-bottom:18px}
+.metric{background:#fff;border:1px solid var(--border);border-radius:10px;padding:11px 13px}
+.metric-label{font-size:10px;color:var(--lgrey);margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px}
+.metric-value{font-size:22px;font-weight:700}
+.metric-sub{font-size:10px;color:var(--lgrey);margin-top:2px}
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:18px;border-radius:10px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:12px;min-width:420px}
+th{background:var(--dark);color:#fff;padding:9px 10px;text-align:center;font-weight:600;font-size:11px;white-space:nowrap}
+th:first-child{text-align:left}
+td{padding:8px 10px;border-bottom:1px solid #f0f0f0;text-align:center}
+td:first-child{text-align:left;color:var(--grey)}
+tr:last-child td{border-bottom:none}
+tr.alt td{background:#fafafa}
+tr.hl td{font-weight:700;background:#eef9f4}
+tr.hl-red td{font-weight:700;color:var(--red)}
+tr.total td{font-weight:700;background:var(--dark);color:#fff}
+tr.total td:first-child{color:var(--gold)}
+.sec-title{font-size:14px;font-weight:700;color:var(--dark);margin-bottom:5px;margin-top:4px}
+.sec-sub{font-size:12px;color:var(--lgrey);margin-bottom:13px}
+.chart-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:13px;margin-bottom:16px}
+canvas{display:block}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+@media(max-width:560px){.two-col{grid-template-columns:1fr}}
+.acard-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:18px}
+.acard{background:#fff;border-radius:10px;border:1px solid var(--border);overflow:hidden}
+.acard-hdr{padding:10px 13px;font-size:13px;font-weight:700;color:#fff}
+.acard-body{padding:10px 13px}
+.arow{display:flex;justify-content:space-between;font-size:12px;color:var(--grey);padding:4px 0;border-bottom:1px solid #f5f5f5}
+.arow:last-child{border-bottom:none}
+.aval{font-weight:700;color:var(--dark)}
+.slider-section{background:#fff;border-radius:12px;border:1px solid var(--border);padding:15px;margin-bottom:16px}
+.slider-row{display:flex;align-items:center;gap:10px;margin-bottom:11px}
+.slider-row:last-child{margin-bottom:0}
+.slider-label{font-size:12px;color:var(--grey);min-width:170px}
+.slider-row input[type=range]{flex:1;accent-color:var(--dark)}
+.slider-val{font-size:13px;font-weight:700;color:var(--dark);min-width:75px;text-align:right}
+.rhythm-grid{display:flex;gap:3px;margin-bottom:7px}
+.rhythm-day{flex:1;border-radius:7px;padding:8px 3px;text-align:center;font-size:10px;font-weight:600;line-height:1.3;min-height:46px;display:flex;align-items:center;justify-content:center}
+.rhythm-legend{display:flex;gap:12px;font-size:11px;color:var(--lgrey);margin-bottom:16px;flex-wrap:wrap}
+.rl{display:flex;align-items:center;gap:4px}
+.rl-dot{width:8px;height:8px;border-radius:2px}
+.mix-legend{display:flex;flex-direction:column;gap:7px;padding-top:6px}
+.mix-item{display:flex;align-items:center;gap:7px;font-size:12px}
+.mix-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.mix-label{flex:1;color:var(--grey)}
+.mix-val{font-weight:700}
+.mix-pct{color:var(--lgrey);font-size:11px}
+.insight-box{background:var(--dark);border-radius:12px;padding:15px;margin-bottom:16px}
+.insight-box h3{color:var(--gold);font-size:13px;margin-bottom:6px}
+.insight-box p{color:rgba(255,255,255,.85);font-size:12px;line-height:1.6}
+.warn-box{background:#fff8ec;border:1px solid #e8c87a;border-radius:10px;padding:13px;margin-top:12px;font-size:12px;line-height:1.6}
+.warn-box strong{color:var(--amber)}
+.note{font-size:11px;color:var(--lgrey);font-style:italic;margin-top:8px;line-height:1.5}
+.c-green{color:var(--green)!important}
+.c-red{color:var(--red)!important}
+.c-gold{color:var(--gold)!important}
+.c-blue{color:var(--blue)!important}
+</style>
+</head>
+<body>
+<div class="app-header">
+  <h1>GROUNDSONG</h1>
+  <span>Business Model Dashboard</span>
+</div>
+<div class="tabs">
+  <button class="tab active" onclick="showTab('overview',this)">Overview</button>
+  <button class="tab" onclick="showTab('assumptions',this)">Assumptions</button>
+  <button class="tab" onclick="showTab('capacity',this)">Capacity</button>
+  <button class="tab" onclick="showTab('pnl',this)">P&amp;L</button>
+  <button class="tab" onclick="showTab('licensing',this)">Licensing</button>
+  <button class="tab" onclick="showTab('pipeline',this)">Pipeline</button>
+</div>
+
+<!-- OVERVIEW -->
+<div id="overview" class="section active">
+  <div class="scenario-bar">
+    <label>Scenario:</label>
+    <button class="s-btn low active" onclick="setScenario('low',this,'ov')">Low</button>
+    <button class="s-btn mod" onclick="setScenario('mod',this,'ov')">Moderate</button>
+    <button class="s-btn high" onclick="setScenario('high',this,'ov')">High</button>
+  </div>
+  <div class="metrics" id="ov-metrics"></div>
+  <div class="two-col">
+    <div class="chart-card">
+      <div class="sec-title" style="margin-bottom:8px">3-year revenue — all scenarios</div>
+      <canvas id="revChart"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="sec-title" style="margin-bottom:8px">Revenue mix — year 2</div>
+      <canvas id="mixChart"></canvas>
+      <div class="mix-legend" id="mix-legend"></div>
+    </div>
+  </div>
+  <div class="insight-box">
+    <h3>Key insight</h3>
+    <p>Even the low scenario clears $100K per founder in Year 2 — entirely because of the premium corporate pricing reframe. Charging $2,000+ from day one is the single highest-leverage decision. The moderate scenario achieves $100K+ per founder in Year 1.</p>
+  </div>
+  <div class="sec-title">All-scenario comparison</div>
+  <div class="tbl-wrap"><table id="ov-table"></table></div>
+</div>
+
+<!-- ASSUMPTIONS -->
+<div id="assumptions" class="section">
+  <div class="sec-title">Scenario assumptions</div>
+  <div class="sec-sub">All scenarios assume corporate-rate pricing from day one.</div>
+  <div class="acard-grid">
+    <div class="acard"><div class="acard-hdr" style="background:var(--lowc)">Low</div><div class="acard-body">
+      <div class="arow">Duo sessions/week<span class="aval">2</span></div>
+      <div class="arow">Solo sessions/week<span class="aval">1</span></div>
+      <div class="arow">Corporate base rate<span class="aval">$2,000</span></div>
+      <div class="arow">Premium/month<span class="aval">1</span></div>
+      <div class="arow">Working weeks<span class="aval">44</span></div>
+      <div class="arow">Corp / NFP mix<span class="aval">60/40</span></div>
+    </div></div>
+    <div class="acard"><div class="acard-hdr" style="background:var(--modc)">Moderate</div><div class="acard-body">
+      <div class="arow">Duo sessions/week<span class="aval">3</span></div>
+      <div class="arow">Solo sessions/week<span class="aval">1–2</span></div>
+      <div class="arow">Corporate base rate<span class="aval">$2,700</span></div>
+      <div class="arow">Premium/month<span class="aval">2</span></div>
+      <div class="arow">Working weeks<span class="aval">44–46</span></div>
+      <div class="arow">Corp / NFP mix<span class="aval">75/25</span></div>
+    </div></div>
+    <div class="acard"><div class="acard-hdr" style="background:var(--highc)">High</div><div class="acard-body">
+      <div class="arow">Duo sessions/week<span class="aval">4</span></div>
+      <div class="arow">Solo sessions/week<span class="aval">2</span></div>
+      <div class="arow">Corporate base rate<span class="aval">$3,200</span></div>
+      <div class="arow">Premium/month<span class="aval">3</span></div>
+      <div class="arow">Working weeks<span class="aval">46</span></div>
+      <div class="arow">Corp / NFP mix<span class="aval">85/15</span></div>
+    </div></div>
+  </div>
+  <div class="sec-title">Pricing tiers</div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Format</th><th>Duration</th><th>Pax</th><th>Corporate</th><th>NFP</th></tr></thead>
+    <tbody>
+      <tr><td>Standard session</td><td>2 hrs</td><td>20</td><td>$2,000–$2,500</td><td>$1,200–$1,800</td></tr>
+      <tr class="alt"><td>Premium session</td><td>2 hrs</td><td>20</td><td>$2,500–$3,500</td><td>$1,800–$2,500</td></tr>
+      <tr><td>Half-day program</td><td>3–4 hrs</td><td>30</td><td>$3,500–$5,000</td><td>$2,500–$3,500</td></tr>
+      <tr class="alt"><td>Full-day retreat</td><td>6–8 hrs</td><td>30</td><td>$5,000–$8,000</td><td>—</td></tr>
+      <tr><td>Annual retainer (6 sessions)</td><td>Flexible</td><td>20/session</td><td>$12,000–$18,000</td><td>$4,500–$6,500</td></tr>
+      <tr class="alt"><td>Community / pilot</td><td>90 min</td><td>20</td><td>—</td><td>$800–$1,200</td></tr>
+    </tbody>
+  </table></div>
+  <div class="sec-title">Operating costs</div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Category</th><th>Year 1</th><th>Year 2</th><th>Year 3</th></tr></thead>
+    <tbody>
+      <tr><td>Equipment & instruments</td><td>$8,000</td><td>$4,000</td><td>$4,000</td></tr>
+      <tr class="alt"><td>Travel & logistics</td><td>$6,000</td><td>$10,000</td><td>$12,000</td></tr>
+      <tr><td>Insurance (PL + PI)</td><td>$3,500</td><td>$3,500</td><td>$3,500</td></tr>
+      <tr class="alt"><td>Marketing & branding</td><td>$12,000</td><td>$8,000</td><td>$6,000</td></tr>
+      <tr><td>Accounting & legal</td><td>$5,000</td><td>$5,000</td><td>$7,000</td></tr>
+      <tr class="alt"><td>Supply Nation registration</td><td>$0</td><td>$0</td><td>$0</td></tr>
+      <tr><td>Venue / storage / pop-up rent</td><td>$12,000</td><td>$12,000</td><td>$12,000</td></tr>
+      <tr class="alt"><td>Admin & software</td><td>$2,500</td><td>$3,000</td><td>$3,500</td></tr>
+      <tr class="hl"><td>Total</td><td>$49,000</td><td>$45,500</td><td>$48,000</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">Excludes superannuation and income tax. Supply Nation registration is free for suppliers.</p>
+</div>
+
+<!-- CAPACITY -->
+<div id="capacity" class="section">
+  <div class="scenario-bar">
+    <label>Scenario:</label>
+    <button class="s-btn low active" onclick="setScenario('low',this,'cap')">Low</button>
+    <button class="s-btn mod" onclick="setScenario('mod',this,'cap')">Moderate</button>
+    <button class="s-btn high" onclick="setScenario('high',this,'cap')">High</button>
+  </div>
+  <div class="metrics" id="cap-metrics"></div>
+  <div class="sec-title">Weekly rhythm — year 2</div>
+  <div class="rhythm-grid" id="rhythm-grid"></div>
+  <div class="rhythm-legend" id="rhythm-legend"></div>
+  <div class="sec-title">Annual volume & revenue</div>
+  <div class="tbl-wrap"><table id="cap-table"></table></div>
+  <div class="warn-box" id="sustain-note"></div>
+</div>
+
+<!-- P&L -->
+<div id="pnl" class="section">
+  <div class="scenario-bar">
+    <label>Scenario:</label>
+    <button class="s-btn low active" onclick="setScenario('low',this,'pnl')">Low</button>
+    <button class="s-btn mod" onclick="setScenario('mod',this,'pnl')">Moderate</button>
+    <button class="s-btn high" onclick="setScenario('high',this,'pnl')">High</button>
+  </div>
+  <div class="metrics" id="pnl-metrics"></div>
+  <div class="sec-title">3-year profit & loss</div>
+  <div class="tbl-wrap"><table id="pnl-table"></table></div>
+  <div class="chart-card" style="margin-top:16px">
+    <div class="sec-title" style="margin-bottom:8px">Per-founder net income</div>
+    <canvas id="founderChart"></canvas>
+  </div>
+</div>
+
+<!-- LICENSING -->
+<div id="licensing" class="section">
+  <div class="sec-title">Licensing model — year 3+</div>
+  <div class="sec-sub">Conservative: 5 practitioners year 3, growing to 10–15 by year 4–5.</div>
+  <div class="slider-section">
+    <div class="slider-row"><span class="slider-label">Practitioners (year 3)</span><input type="range" min="3" max="15" value="5" step="1" id="l-prac" oninput="updateLic()"><span class="slider-val" id="l-prac-v">5</span></div>
+    <div class="slider-row"><span class="slider-label">Sessions per practitioner/month</span><input type="range" min="2" max="8" value="4" step="1" id="l-sess" oninput="updateLic()"><span class="slider-val" id="l-sess-v">4</span></div>
+    <div class="slider-row"><span class="slider-label">Royalty per session ($)</span><input type="range" min="100" max="500" value="300" step="10" id="l-roy" oninput="updateLic()"><span class="slider-val" id="l-roy-v">$300</span></div>
+    <div class="slider-row"><span class="slider-label">Certification fee ($)</span><input type="range" min="2000" max="8000" value="4000" step="500" id="l-cert" oninput="updateLic()"><span class="slider-val" id="l-cert-v">$4,000</span></div>
+  </div>
+  <div class="metrics" id="lic-metrics"></div>
+  <div class="tbl-wrap"><table id="lic-table"></table></div>
+  <p class="note">Aboriginal knowledge, plant-spirit practice and facilitation methodology require legal IP protection before licensing commences.</p>
+</div>
+
+<!-- PIPELINE -->
+<div id="pipeline" class="section">
+  <div class="sec-title">Perth sales pipeline</div>
+  <div class="sec-sub">Warm-first — exhaust existing networks before cold outreach.</div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Tier</th><th>Sector</th><th>Targets</th><th>Rate</th><th>Angle</th></tr></thead>
+    <tbody>
+      <tr><td style="color:var(--lowc);font-weight:700">T1</td><td>Mining & Resources</td><td>BHP, Rio Tinto, Fortescue</td><td>$2,500–$5,000</td><td>RAP + wellbeing budgets</td></tr>
+      <tr class="alt"><td style="color:var(--lowc);font-weight:700">T1</td><td>State Government</td><td>Dept of Communities, WA Health</td><td>$2,000–$3,500</td><td>DEI + psychosocial obligations</td></tr>
+      <tr><td style="color:var(--lowc);font-weight:700">T1</td><td>Large NFPs</td><td>Anglicare WA, Mission Australia</td><td>$1,800–$3,000</td><td>Burnout + existing networks</td></tr>
+      <tr class="alt"><td style="color:var(--modc);font-weight:700">T2</td><td>Universities</td><td>UWA, Curtin, ECU</td><td>$1,500–$2,500</td><td>Wellbeing weeks</td></tr>
+      <tr><td style="color:var(--modc);font-weight:700">T2</td><td>Mid-tier Corporate</td><td>Law firms, consultancies</td><td>$2,000–$3,000</td><td>Team offsites</td></tr>
+      <tr class="alt"><td style="color:var(--lgrey);font-weight:700">T3</td><td>Arts & Wellness</td><td>Festivals, yoga studios</td><td>$800–$1,500</td><td>Brand building</td></tr>
+    </tbody>
+  </table></div>
+  <div class="sec-title">4-step playbook</div>
+  <div class="acard-grid">
+    <div class="acard"><div class="acard-hdr" style="background:var(--dark)"><span style="color:var(--gold)">01 </span>Warm outreach first</div><div class="acard-body" style="font-size:12px;color:var(--grey);line-height:1.6;padding:12px 13px">Leverage existing corporate and NFP networks before any cold approach. Do not cold-sell before exhausting warm channels.</div></div>
+    <div class="acard"><div class="acard-hdr" style="background:var(--dark)"><span style="color:var(--gold)">02 </span>Lead with the problem</div><div class="acard-body" style="font-size:12px;color:var(--grey);line-height:1.6;padding:12px 13px">"We help organisations meet RAP commitments through meaningful, culturally grounded wellbeing programs." Short. Specific. Relevant.</div></div>
+    <div class="acard"><div class="acard-hdr" style="background:var(--dark)"><span style="color:var(--gold)">03 </span>Offer a pilot session</div><div class="acard-body" style="font-size:12px;color:var(--grey);line-height:1.6;padding:12px 13px">60–90 min at $1,500–$2,000. Framed as a pilot for their internal wellbeing program. Goal: convert to retainer within 60 days.</div></div>
+    <div class="acard"><div class="acard-hdr" style="background:var(--dark)"><span style="color:var(--gold)">04 </span>Push toward retainers</div><div class="acard-body" style="font-size:12px;color:var(--grey);line-height:1.6;padding:12px 13px">Target 6-session annual contracts from the first proposal. Retainers stabilise cash flow and deepen the client relationship.</div></div>
+  </div>
+</div>
+
+<script>
+// Safari/iPad roundRect polyfill
+if(!CanvasRenderingContext2D.prototype.roundRect){
+  CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
+    r=Math.min(r,w/2,h/2);
+    this.moveTo(x+r,y);
+    this.lineTo(x+w-r,y);
+    this.arcTo(x+w,y,x+w,y+r,r);
+    this.lineTo(x+w,y+h-r);
+    this.arcTo(x+w,y+h,x+w-r,y+h,r);
+    this.lineTo(x+r,y+h);
+    this.arcTo(x,y+h,x,y+h-r,r);
+    this.lineTo(x,y+r);
+    this.arcTo(x,y,x+r,y,r);
+    this.closePath();
+    return this;
+  };
+}
+const SC={
+  low: {duoW:[2,2,3],soloW:[1,1,2],weeks:[44,44,46],duoR:[1800,2000,2200],soloR:[1200,1400,1500],premM:[1,1,2],premR:[3500,4000,4500],costs:[49000,45500,48000],color:'#E24B4A',label:'Low'},
+  mod: {duoW:[3,4,4],soloW:[1,2,2],weeks:[44,46,46],duoR:[2200,2700,2900],soloR:[1500,1800,2000],premM:[2,3,4],premR:[4000,4500,5000],costs:[49000,45500,48000],color:'#BA7517',label:'Moderate'},
+  high:{duoW:[4,4,4],soloW:[2,2,3],weeks:[46,46,46],duoR:[2700,3200,3500],soloR:[1800,2200,2500],premM:[3,4,5],premR:[5000,6000,7000],costs:[49000,45500,48000],color:'#27AE60',label:'High'},
+};
+let curOv='low',curCap='low',curPnl='low';
+
+function fmtK(n){return '$'+Math.round(n/1000)+'K';}
+function fmtD(n){return '$'+Math.round(n).toLocaleString();}
+function rev(sc,i){const s=SC[sc];const duo=s.duoW[i]*s.weeks[i]*s.duoR[i];const solo=s.soloW[i]*s.weeks[i]*s.soloR[i];const prem=s.premM[i]*12*s.premR[i];return{duo,solo,prem,total:duo+solo+prem};}
+function pnl(sc,i){const r=rev(sc,i);const c=SC[sc].costs[i];return{...r,costs:c,net:r.total-c,perF:Math.round((r.total-c)/2)};}
+
+function showTab(id,btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='overview')setTimeout(drawAllCharts,50);
+  if(id==='pnl')setTimeout(drawFounderChart,50);
+}
+function setScenario(sc,btn,ctx){
+  btn.closest('.scenario-bar').querySelectorAll('.s-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(ctx==='ov'){curOv=sc;renderOverview();}
+  if(ctx==='cap'){curCap=sc;renderCapacity();}
+  if(ctx==='pnl'){curPnl=sc;renderPnl();}
+}
+
+function setupCanvas(id,h){
+  const el=document.getElementById(id);
+  const dpr=window.devicePixelRatio||1;
+  const w=el.parentElement.clientWidth-26;
+  el.width=w*dpr;el.height=h*dpr;
+  el.style.width=w+'px';el.style.height=h+'px';
+  const ctx=el.getContext('2d');ctx.scale(dpr,dpr);
+  return{ctx,w,h};
+}
+
+function drawBarChart(id,labels,datasets,h){
+  const{ctx,w}=setupCanvas(id,h);
+  const pad={l:48,r:12,t:22,b:28};
+  const cW=w-pad.l-pad.r,cH=h-pad.t-pad.b;
+  const allV=datasets.flatMap(d=>d.data);
+  const maxV=Math.max(...allV)*1.12;
+  // grid lines
+  for(let i=0;i<=4;i++){
+    const y=pad.t+cH-(cH/4)*i;
+    ctx.strokeStyle='rgba(0,0,0,0.06)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+cW,y);ctx.stroke();
+    ctx.fillStyle='#aaa';ctx.font='10px system-ui';ctx.textAlign='right';
+    ctx.fillText('$'+Math.round(maxV/4*i/1000)+'K',pad.l-5,y+3);
+  }
+  // bars
+  const nG=labels.length,nS=datasets.length,gW=cW/nG;
+  const bW=Math.min(gW/(nS+1),28);
+  datasets.forEach((ds,si)=>{
+    ds.data.forEach((val,gi)=>{
+      const x=pad.l+gi*gW+(gW-(nS*bW+(nS-1)*3))/2+si*(bW+3);
+      const bh=(val/maxV)*cH,y=pad.t+cH-bh;
+      ctx.fillStyle=ds.color+'55';ctx.strokeStyle=ds.color;ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.roundRect(x,y,bW,bh,2);ctx.fill();ctx.stroke();
+    });
+  });
+  // x labels
+  ctx.fillStyle='#666';ctx.font='11px system-ui';ctx.textAlign='center';
+  labels.forEach((l,i)=>ctx.fillText(l,pad.l+(i+0.5)*gW,h-6));
+  // legend top
+  datasets.forEach((ds,i)=>{
+    const lx=pad.l+i*72;
+    ctx.fillStyle=ds.color;ctx.beginPath();ctx.roundRect(lx,4,8,8,2);ctx.fill();
+    ctx.fillStyle='#555';ctx.font='10px system-ui';ctx.textAlign='left';
+    ctx.fillText(ds.label,lx+11,12);
+  });
+}
+
+function drawDoughnut(id,data,colors,h){
+  const{ctx,w}=setupCanvas(id,h);
+  const cx=w/2,cy=h/2,r=Math.min(w,h)*0.4,ir=r*0.58;
+  const total=data.reduce((a,b)=>a+b,0);
+  let angle=-Math.PI/2;
+  data.forEach((v,i)=>{
+    const slice=(v/total)*Math.PI*2;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,angle,angle+slice);ctx.closePath();
+    ctx.fillStyle=colors[i];ctx.fill();
+    angle+=slice;
+  });
+  // hole
+  ctx.beginPath();ctx.arc(cx,cy,ir,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();
+}
+
+function drawSingleBar(id,labels,data,color,h){
+  const{ctx,w}=setupCanvas(id,h);
+  const pad={l:50,r:12,t:24,b:28};
+  const cW=w-pad.l-pad.r,cH=h-pad.t-pad.b;
+  const maxV=Math.max(...data)*1.18;
+  for(let i=0;i<=4;i++){
+    const y=pad.t+cH-(cH/4)*i;
+    ctx.strokeStyle='rgba(0,0,0,0.06)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+cW,y);ctx.stroke();
+    ctx.fillStyle='#aaa';ctx.font='10px system-ui';ctx.textAlign='right';
+    ctx.fillText('$'+Math.round(maxV/4*i/1000)+'K',pad.l-5,y+3);
+  }
+  const bW=Math.min(cW/labels.length*0.5,52);
+  data.forEach((val,i)=>{
+    const x=pad.l+(i+0.5)*cW/labels.length-bW/2;
+    const bh=(val/maxV)*cH,y=pad.t+cH-bh;
+    ctx.fillStyle=color+'55';ctx.strokeStyle=color;ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.roundRect(x,y,bW,bh,3);ctx.fill();ctx.stroke();
+    ctx.fillStyle=color;ctx.font='bold 11px system-ui';ctx.textAlign='center';
+    ctx.fillText(fmtK(val),x+bW/2,y-5);
+  });
+  ctx.fillStyle='#666';ctx.font='11px system-ui';ctx.textAlign='center';
+  labels.forEach((l,i)=>ctx.fillText(l,pad.l+(i+0.5)*cW/labels.length,h-6));
+}
+
+function drawAllCharts(){
+  const allR=['low','mod','high'].map(s=>[0,1,2].map(i=>Math.round(rev(s,i).total)));
+  drawBarChart('revChart',['Year 1','Year 2','Year 3'],[
+    {label:'Low',data:allR[0],color:'#E24B4A'},
+    {label:'Moderate',data:allR[1],color:'#BA7517'},
+    {label:'High',data:allR[2],color:'#27AE60'},
+  ],210);
+  const r1=rev(curOv,1);
+  const mData=[Math.round(r1.duo),Math.round(r1.solo),Math.round(r1.prem)];
+  const mColors=['#378ADD','#1D9E75','#D85A30'];
+  const mLabels=['Duo sessions','Solo sessions','Premium'];
+  const tot=mData.reduce((a,b)=>a+b,0);
+  drawDoughnut('mixChart',mData,mColors,160);
+  document.getElementById('mix-legend').innerHTML=mLabels.map((l,i)=>`
+    <div class="mix-item">
+      <span class="mix-dot" style="background:${mColors[i]}"></span>
+      <span class="mix-label">${l}</span>
+      <span class="mix-val" style="color:${mColors[i]}">${fmtK(mData[i])}</span>
+      <span class="mix-pct">${Math.round(mData[i]/tot*100)}%</span>
+    </div>`).join('');
+}
+function drawFounderChart(){
+  const ps=[0,1,2].map(i=>pnl(curPnl,i));
+  drawSingleBar('founderChart',['Year 1','Year 2','Year 3'],ps.map(p=>p.perF),SC[curPnl].color,210);
+}
+
+function renderOverview(){
+  const sc=curOv,p0=pnl(sc,0),p1=pnl(sc,1),p2=pnl(sc,2);
+  document.getElementById('ov-metrics').innerHTML=[
+    {l:'Year 1 gross',v:fmtK(p0.total),s:'Net: '+fmtK(p0.net),c:SC[sc].color},
+    {l:'Year 2 gross',v:fmtK(p1.total),s:'Net: '+fmtK(p1.net),c:SC[sc].color},
+    {l:'Year 3 gross',v:fmtK(p2.total),s:'Net: '+fmtK(p2.net),c:SC[sc].color},
+    {l:'Year 2 per founder',v:fmtK(p1.perF),s:'Before tax',c:'#1D9E75'},
+  ].map(m=>`<div class="metric"><div class="metric-label">${m.l}</div><div class="metric-value" style="color:${m.c}">${m.v}</div><div class="metric-sub">${m.s}</div></div>`).join('');
+  drawAllCharts();
+  const rows=['low','mod','high'].map((s,j)=>`
+    <tr${j%2?' class="alt"':''}><td style="font-weight:700;color:${SC[s].color}">${SC[s].label}</td>
+    <td class="c-blue">${fmtK(rev(s,0).total)}</td><td class="c-green" style="font-weight:700">${fmtK(pnl(s,0).perF)}</td>
+    <td class="c-blue">${fmtK(rev(s,1).total)}</td><td class="c-green" style="font-weight:700">${fmtK(pnl(s,1).perF)}</td>
+    <td class="c-blue">${fmtK(rev(s,2).total)}</td><td class="c-green" style="font-weight:700">${fmtK(pnl(s,2).perF)}</td></tr>`).join('');
+  document.getElementById('ov-table').innerHTML=`<thead><tr><th>Scenario</th><th>Y1 gross</th><th>Y1/founder</th><th>Y2 gross</th><th>Y2/founder</th><th>Y3 gross</th><th>Y3/founder</th></tr></thead><tbody>${rows}</tbody>`;
+}
+
+function renderCapacity(){
+  const sc=curCap,sv=SC[sc];
+  const tot=[0,1,2].map(i=>(sv.duoW[i]+sv.soloW[i])*sv.weeks[i]);
+  document.getElementById('cap-metrics').innerHTML=[
+    {l:'Year 1 sessions',v:tot[0],s:fmtK(rev(sc,0).total)+' revenue'},
+    {l:'Year 2 sessions',v:tot[1],s:fmtK(rev(sc,1).total)+' revenue'},
+    {l:'Year 3 sessions',v:tot[2],s:fmtK(rev(sc,2).total)+' revenue'},
+    {l:'Year 2 per founder',v:fmtK(pnl(sc,1).perF),s:'Before tax',c:'#1D9E75'},
+  ].map(m=>`<div class="metric"><div class="metric-label">${m.l}</div><div class="metric-value" style="color:${m.c||SC[sc].color}">${m.v}</div><div class="metric-sub">${m.s}</div></div>`).join('');
+  const d=sv.duoW[1],sl=sv.soloW[1],rest=7-d-sl;
+  const days=[...Array(d).fill({t:'duo',l:'Duo'}),...Array(sl).fill({t:'solo',l:'Solo'}),...Array(rest).fill({t:'rest',l:'Admin'})];
+  const dc={duo:'#378ADD',solo:'#1D9E75',rest:'rgba(0,0,0,0.06)'};
+  const tc={duo:'#fff',solo:'#fff',rest:'#aaa'};
+  document.getElementById('rhythm-grid').innerHTML=days.map(x=>`<div class="rhythm-day" style="background:${dc[x.t]};color:${tc[x.t]}">${x.l}</div>`).join('');
+  document.getElementById('rhythm-legend').innerHTML=`<div class="rl"><span class="rl-dot" style="background:#378ADD"></span>Duo (${d}/wk)</div><div class="rl"><span class="rl-dot" style="background:#1D9E75"></span>Solo (${sl}/wk)</div><div class="rl"><span class="rl-dot" style="background:#ccc"></span>Admin (${rest}/wk)</div>`;
+  let rows=`<thead><tr><th>Metric</th><th>Year 1</th><th>Year 2</th><th>Year 3</th></tr></thead><tbody>`;
+  [['Duo sessions/week',[0,1,2].map(i=>sv.duoW[i]),false],
+   ['Solo sessions/week',[0,1,2].map(i=>sv.soloW[i]),false],
+   ['Working weeks',[0,1,2].map(i=>sv.weeks[i]),false],
+   ['Annual duo sessions',[0,1,2].map(i=>sv.duoW[i]*sv.weeks[i]),true],
+   ['Annual solo sessions',[0,1,2].map(i=>sv.soloW[i]*sv.weeks[i]),true],
+   ['Premium sessions/year',[0,1,2].map(i=>sv.premM[i]*12),true],
+   ['Duo rate',[0,1,2].map(i=>fmtD(sv.duoR[i])),false],
+   ['Solo rate',[0,1,2].map(i=>fmtD(sv.soloR[i])),false],
+   ['Duo revenue',[0,1,2].map(i=>fmtK(sv.duoW[i]*sv.weeks[i]*sv.duoR[i])),false,'c-blue'],
+   ['Solo revenue',[0,1,2].map(i=>fmtK(sv.soloW[i]*sv.weeks[i]*sv.soloR[i])),false,'c-blue'],
+   ['Premium revenue',[0,1,2].map(i=>fmtK(sv.premM[i]*12*sv.premR[i])),false,'c-blue'],
+  ].forEach(([l,vals,hl,cls],j)=>{
+    rows+=`<tr${hl?' class="hl"':j%2?' class="alt"':''}><td>${l}</td>${vals.map(v=>`<td${cls?' class="'+cls+'"':''}>${v}</td>`).join('')}</tr>`;
+  });
+  rows+=`<tr class="total"><td>Gross revenue</td>${[0,1,2].map(i=>`<td style="color:#7FFFD4">${fmtK(rev(sc,i).total)}</td>`).join('')}</tr></tbody>`;
+  document.getElementById('cap-table').innerHTML=rows;
+  const sus={low:'3 session half-days/week. Sustainable with capacity for client development.',mod:'5 session half-days/week. Full workload — requires efficient scheduling.',high:'6 session half-days/week. Demanding. Strong cancellation policy essential.'};
+  document.getElementById('sustain-note').innerHTML=`<strong>Sustainability (${SC[sc].label}):</strong> ${sus[sc]}`;
+}
+
+function renderPnl(){
+  const sc=curPnl,ps=[0,1,2].map(i=>pnl(sc,i));
+  document.getElementById('pnl-metrics').innerHTML=[
+    {l:'Year 1 per founder',v:fmtK(ps[0].perF),s:'Gross: '+fmtK(ps[0].total)},
+    {l:'Year 2 per founder',v:fmtK(ps[1].perF),s:'Gross: '+fmtK(ps[1].total)},
+    {l:'Year 3 per founder',v:fmtK(ps[2].perF),s:'Gross: '+fmtK(ps[2].total)},
+  ].map(m=>`<div class="metric"><div class="metric-label">${m.l}</div><div class="metric-value c-green">${m.v}</div><div class="metric-sub">${m.s}</div></div>`).join('');
+  const costLines=[['Equipment & instruments',['($8,000)','($4,000)','($4,000)']],['Travel & logistics',['($6,000)','($10,000)','($12,000)']],['Insurance',['($3,500)','($3,500)','($3,500)']],['Marketing & branding',['($12,000)','($8,000)','($6,000)']],['Accounting & legal',['($5,000)','($5,000)','($7,000)']],['Supply Nation registration',['$0','$0','$0']],['Venue / storage / rent',['($12,000)','($12,000)','($12,000)']],['Admin & software',['($2,500)','($3,000)','($3,500)']]];
+  let rows=`<thead><tr><th>Line item</th><th>Year 1</th><th>Year 2</th><th>Year 3</th></tr></thead><tbody>`;
+  rows+=`<tr><td>Duo session revenue</td>${ps.map(p=>`<td class="c-blue">${fmtK(p.duo)}</td>`).join('')}</tr>`;
+  rows+=`<tr class="alt"><td>Solo session revenue</td>${ps.map(p=>`<td class="c-blue">${fmtK(p.solo)}</td>`).join('')}</tr>`;
+  rows+=`<tr><td>Premium / retreat revenue</td>${ps.map(p=>`<td class="c-blue">${fmtK(p.prem)}</td>`).join('')}</tr>`;
+  rows+=`<tr class="hl"><td>GROSS REVENUE</td>${ps.map(p=>`<td class="c-green">${fmtK(p.total)}</td>`).join('')}</tr>`;
+  costLines.forEach(([l,v],j)=>{
+    const free=l.includes('Supply');
+    rows+=`<tr${j%2?' class="alt"':''}><td>${l}</td>${v.map(x=>`<td class="${free?'c-green':'c-red'}">${x}</td>`).join('')}</tr>`;
+  });
+  rows+=`<tr class="hl-red"><td>TOTAL COSTS</td>${ps.map(p=>`<td>(${fmtK(p.costs)})</td>`).join('')}</tr>`;
+  rows+=`<tr class="hl"><td>NET PROFIT (BEFORE TAX)</td>${ps.map(p=>`<td class="c-green">${fmtK(p.net)}</td>`).join('')}</tr>`;
+  rows+=`<tr class="total"><td>PER FOUNDER NET INCOME</td>${ps.map(p=>`<td style="color:#FFD700">${fmtK(p.perF)}</td>`).join('')}</tr></tbody>`;
+  document.getElementById('pnl-table').innerHTML=rows;
+  drawFounderChart();
+}
+
+function updateLic(){
+  const p=+document.getElementById('l-prac').value,s=+document.getElementById('l-sess').value,r=+document.getElementById('l-roy').value,c=+document.getElementById('l-cert').value;
+  document.getElementById('l-prac-v').textContent=p;
+  document.getElementById('l-sess-v').textContent=s;
+  document.getElementById('l-roy-v').textContent='$'+r;
+  document.getElementById('l-cert-v').textContent='$'+c.toLocaleString();
+  const annSess=p*s*12,royInc=annSess*r,newP=Math.round(p*0.6);
+  const certInc=newP*c,ren=p*1000,kit=newP*2000,gross=royInc+certInc+ren+kit,net=Math.round(gross*0.85);
+  document.getElementById('lic-metrics').innerHTML=[
+    {l:'Sessions/year',v:annSess.toLocaleString(),s:'By '+p+' practitioners'},
+    {l:'Royalty income',v:fmtK(royInc),s:p+' × '+s*12+' sess × $'+r,c:'#1D9E75'},
+    {l:'Certification income',v:fmtK(certInc),s:newP+' new prac × $'+c.toLocaleString()},
+    {l:'Net licensing income',v:fmtK(net),s:'After 15% overhead',c:'#1D9E75'},
+  ].map(m=>`<div class="metric"><div class="metric-label">${m.l}</div><div class="metric-value" style="color:${m.c||'#1A1A2E'}">${m.v}</div><div class="metric-sub">${m.s}</div></div>`).join('');
+  document.getElementById('lic-table').innerHTML=`
+    <thead><tr><th>Revenue line</th><th>Calculation</th><th>Amount</th></tr></thead>
+    <tbody>
+      <tr><td>Session royalties</td><td>${p} prac × ${s}/mo × 12 × $${r}</td><td class="c-green">${fmtK(royInc)}</td></tr>
+      <tr class="alt"><td>Certification fees</td><td>${newP} new × $${c.toLocaleString()}</td><td>${fmtK(certInc)}</td></tr>
+      <tr><td>Annual renewals</td><td>${p} × $1,000</td><td>${fmtK(ren)}</td></tr>
+      <tr class="alt"><td>Starter kit margin</td><td>${newP} × ~$2,000</td><td>${fmtK(kit)}</td></tr>
+      <tr class="hl"><td>Total gross</td><td></td><td class="c-green">${fmtK(gross)}</td></tr>
+      <tr><td>Overhead (~15%)</td><td></td><td class="c-red">(${fmtK(gross*0.15)})</td></tr>
+      <tr class="total"><td>Net licensing income</td><td></td><td style="color:#FFD700">${fmtK(net)}</td></tr>
+    </tbody>`;
+}
+
+window.addEventListener('load',()=>{renderOverview();renderCapacity();renderPnl();updateLic();});
+window.addEventListener('resize',()=>{
+  const a=document.querySelector('.section.active');
+  if(!a)return;
+  if(a.id==='overview')drawAllCharts();
+  if(a.id==='pnl')drawFounderChart();
+});
+</script>
+</body>
+</html>
