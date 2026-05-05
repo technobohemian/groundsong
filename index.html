@@ -7,6 +7,14 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Groundsong">
 <title>Groundsong</title>
+<script>
+if('serviceWorker' in navigator){
+  var swCode="self.addEventListener('install',function(e){e.waitUntil(caches.open('groundsong-v1').then(function(c){return c.add('/');}));});self.addEventListener('fetch',function(e){e.respondWith(caches.match(e.request).then(function(r){return r||fetch(e.request).then(function(res){return caches.open('groundsong-v1').then(function(c){c.put(e.request,res.clone());return res;});});}));});";
+  var blob=new Blob([swCode],{type:'application/javascript'});
+  var url=URL.createObjectURL(blob);
+  navigator.serviceWorker.register(url).catch(function(){});
+}
+</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
